@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker Application</title>
+    <link rel="stylesheet" href="./bootstrap.min.css" />
+    <link rel="stylesheet" href="./bootstrap-icons.min.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body class="bg-light" dir="rtl">
+    <div
+      class="container bg-secondary bg-opacity-25 border border-danger rounded-4"
+    >
+      <div class="row justify-content-around">
+        <div class="col-12">
+          <h2 class="text-center text-primary mt-4">
+            Expense Tracker Application
+          </h2>
+        </div>
+        <div class="row justify-content-center my-3">
+          <div class="col-8 col-sm-6 text-center">
+            <h4 class="bg-success p-2 rounded text-white">الفئات</h4>
+          </div>
+        </div>
+        <div class="row g-0 mt-3 px-1">
+          <div class="col-8 col-sm-3 ps-2 pe-2 pe-sm-4 mt-2 mt-sm-0">
+            <button class="btn btn-danger w-100" id="addBtn">أضف مصروف</button>
+          </div>
+
+          <div class="col-sm-2 col-4 mt-2 mt-sm-0">
+            <select class="form-select text-center" id="expenseCategory">
+              <option value="مواصلات">مواصلات</option>
+              <option value="ملابس">ملابس</option>
+              <option value="طعام">طعام</option>
+              <option value="ترفيه">ترفيه</option>
+            </select>
+          </div>
+          <div class="col-sm-2 col-4 pe-2">
+            <input
+              type="number"
+              class="form-control text-center"
+              placeholder="القيمة"
+              id="expenseAmount"
+            />
+          </div>
+          <div class="col-8 col-sm-5 ps-sm-4 pe-2">
+            <input
+              type="text"
+              class="form-control text-center"
+              placeholder="وصف المصروف"
+              id="expenseTitle"
+            />
+          </div>
+        </div>
+        <div
+          class="row mt-4 align-items-center justify-content-sm-start justify-content-around me-3"
+        >
+          <div class="col-auto">
+            <label for="filterCategory" class="col-form-label fw-bold mx-5"
+              >فرز حسب</label
+            >
+          </div>
+          <div class="col-sm-3 col-8">
+            <select class="form-select text-center" id="filterCategory">
+              <option value="all" selected>جميع الفئات</option>
+              <option value="مواصلات">مواصلات</option>
+              <option value="ملابس">ملابس</option>
+              <option value="طعام">طعام</option>
+              <option value="ترفيه">ترفيه</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row mt-1">
+          <div class="col-6 col-sm-12 px-3">
+            <table class="table table-bordered border-danger text-center mt-2">
+              <thead class="table-danger border-danger">
+                <tr>
+                  <th class="col-2">الفئة</th>
+                  <th class="col-2">القيمة</th>
+                  <th class="col-7">وصف المصروف</th>
+                  <th class="col-1">حذف</th>
+                </tr>
+              </thead>
+              <tbody id="tbody">
+                <tr>
+                  <td colspan="4" class="text-muted fw-bold py-3">
+                    لا توجد مصاريف حاليا
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="row justify-content-around my-4">
+          <div class="col-auto bg-primary text-center pt-1 rounded text-white">
+            <h5>الاجمالي</h5>
+          </div>
+          <div
+            class="col-2 bg-primary text-center pt-1 rounded text-white fw-bold"
+          >
+            <span id="totalAmount">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      let expenses = [];
+      const titleInput = document.getElementById("expenseTitle");
+      const amountInput = document.getElementById("expenseAmount");
+      const categorySelect = document.getElementById("expenseCategory");
+      const addBtn = document.getElementById("addBtn");
+      const tableBody = document.getElementById("tbody");
+      const filterSelect = document.getElementById("filterCategory");
+      const totalAmountElement = document.getElementById("totalAmount");
+      addBtn.addEventListener("click", () => {
+        const title = titleInput.value.trim();
+        const amount = parseFloat(amountInput.value);
+        const category = categorySelect.value;
+        if (!title || isNaN(amount) || amount <= 0) {
+          alert("!يرجى ادخال وصف وقيمة صالحة للمصروف");
+          return;
+        }
+        const expense = {
+          id: Date.now(),
+          title: title,
+          amount: amount,
+          category: category,
+        };
+        expenses.push(expense);
+        titleInput.value = "";
+        amountInput.value = "";
+        renderExpenses();
+      });
+      function renderExpenses() {
+        const selectedFilter = filterSelect.value;
+        const filteredExpenses = expenses.filter((item) => {
+          return selectedFilter === "all" || item.category === selectedFilter;
+        });
+        tableBody.innerHTML = "";
+        if (filteredExpenses.length === 0) {
+          tableBody.innerHTML = `
+              <tr>
+                <td colspan="4" class="text-muted fw-bold py-3">
+                 لا توجد مصاريف لعرضها
+                </td>
+              </tr>`;
+          totalAmountElement.textContent = "0";
+          return;
+        }
+        filteredExpenses.forEach((item) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+          <td>${item.category}</td>
+          <td>${item.amount.toLocaleString()}</td>
+          <td>${item.title}</td>
+              <td>
+                <button
+                  class="btn btn-sm px-3"
+                  onclick="deleteExpense(${item.id})"
+                >
+                  <i class="bi bi-trash text-danger fs-5"></i>
+                </button>
+              </td> `;
+          tableBody.appendChild(tr);
+        });
+        const total = filteredExpenses.reduce(
+          (sum, item) => sum + item.amount,
+          0,
+        );
+        totalAmountElement.textContent = total.toLocaleString();
+      }
+      function deleteExpense(id) {
+        expenses = expenses.filter((item) => item.id !== id);
+        renderExpenses();
+      }
+      filterSelect.addEventListener("change", renderExpenses);
+    </script>
+    <script src="./bootstrap.bundle.min.js"></script>
+  </body>
+</html>
